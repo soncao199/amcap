@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tỷ giá CAD/USD</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 40px 48px;
+      text-align: center;
+      width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .flags {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 32px;
+      letter-spacing: 0.05em;
+    }
+
+    .rate-label {
+      font-size: 13px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .rate-value {
+      font-size: 52px;
+      font-weight: 700;
+      color: #38bdf8;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .rate-unit {
+      font-size: 14px;
+      color: #475569;
+      margin-bottom: 28px;
+    }
+
+    .inverse {
+      background: #0f172a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 28px;
+    }
+
+    .inverse-label {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .inverse-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #a78bfa;
+    }
+
+    .updated {
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 28px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #0284c7; }
+    button:disabled { background: #334155; cursor: not-allowed; }
+
+    .error {
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #334155;
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="flags">🇨🇦 → 🇺🇸</div>
+    <h1>TỶ GIÁ CAD / USD</h1>
+
+    <div class="rate-label">1 CAD bằng</div>
+    <div class="rate-value" id="rate">—</div>
+    <div class="rate-unit">USD</div>
+
+    <div class="inverse">
+      <div class="inverse-label">1 USD bằng</div>
+      <div class="inverse-value" id="inverse">—</div>
+      <div style="font-size:11px;color:#475569">CAD</div>
+    </div>
+
+    <div class="updated" id="updated">Chưa cập nhật</div>
+
+    <button id="btn" onclick="fetchRate()">Làm mới tỷ giá</button>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    async function fetchRate() {
+      const btn = document.getElementById('btn');
+      const rateEl = document.getElementById('rate');
+      const inverseEl = document.getElementById('inverse');
+      const updatedEl = document.getElementById('updated');
+      const errorEl = document.getElementById('error');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Đang tải...';
+      errorEl.textContent = '';
+
+      try {
+        // Sử dụng API miễn phí của Frankfurter (ECB data)
+        const res = await fetch('https://api.frankfurter.app/latest?from=CAD&to=USD');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        const rate = data.rates.USD;
+        const inverse = (1 / rate).toFixed(4);
+
+        rateEl.textContent = rate.toFixed(4);
+        inverseEl.textContent = inverse;
+        updatedEl.textContent = `Cập nhật lúc: ${new Date().toLocaleString('vi-VN')} (nguồn: ECB)`;
+      } catch (err) {
+        errorEl.textContent = `Lỗi: ${err.message}. Thử lại sau.`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Làm mới tỷ giá';
+      }
+    }
+
+    // Tự động lấy tỷ giá khi tải trang
+    fetchRate();
+  </script>
+</body>
+</html>
